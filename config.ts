@@ -33,7 +33,7 @@ export const DATE_AND_TIME = getDateAndTime();
 export const AI_NAME = "BookRecomm";
 export const OWNER_NAME = "GoodDeeds";
 
-export const WELCOME_MESSAGE = `Hello! I'm ${AI_NAME}, an AI assistant created by ${OWNER_NAME}.`
+export const WELCOME_MESSAGE = `Hi there! I’m ${AI_NAME}, your personal book-picking buddy from ${OWNER_NAME}. Tell me what you like, and I’ll find your next great read!`
 
 export const CLEAR_CHAT_TEXT = "New";
 
