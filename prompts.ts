@@ -14,6 +14,7 @@ If the user's prompt is vague, ask one clear, single follow-up question to refin
 
 export const TOOL_CALLING_PROMPT = `
 - In order to be as truthful as possible, call tools to gather context before answering.
+- Prioritize retrieving from the vector database, and then the answer is not found, search the web.
 `;
 
 export const TONE_STYLE_PROMPT = `
