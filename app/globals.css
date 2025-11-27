@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* --- Custom Variants --- */
 @custom-variant dark (&:is(.dark *));
 
+/* --- Theme Inline Variables Mapping --- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -43,7 +45,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-// Light Theme (Default fallback, set to Dark theme aesthetics)
+/* * Light Theme (Default Fallback) 
+ * Set to the dramatic Black/Purple aesthetic as seen in the image.
+ */
 :root {
   --radius: 0.75rem; 
   --background: oklch(0.08 0 0); /* Deep Black */
@@ -79,7 +83,9 @@
   --sidebar-ring: var(--ring);
 }
 
-// Dark Theme (Matches Light theme, ensuring full dark implementation)
+/* * Dark Theme 
+ * Identical to the light theme, ensuring the black/purple aesthetic is always on. 
+ */
 .dark {
   --background: oklch(0.08 0 0);
   --foreground: oklch(0.95 0 0);
@@ -115,17 +121,23 @@
 }
 
 @layer base {
+  /* Apply border and focus styles globally */
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* Set the main page background, text color, font, and smooth scrolling */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground scroll-smooth;
+    font-family: var(--font-sans); /* Apply the custom font variable */
   }
   
+  /* Utility for a specific type of link/chip */
   .single-char-link {
     @apply bg-card text-card-foreground px-2 py-1 rounded-full hover:underline hover:scale-105 transition-all duration-100 !text-foreground !no-underline border-input border;
   }
-  /* Ensure a solid, dark background for the main chat container area */
+  
+  /* Ensure a solid, dark background for the main chat container area (if used) */
   .chat-wall-container {
     @apply bg-background;
   }
