@@ -1,6 +1,7 @@
+// app/layout.tsx
+import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,21 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LitLens",
-  description: "LitLens",
+  title: "LitLens — AI Book Recommendations",
+  description: "LitLens — Personalized book recommendations powered by AI",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+        {/* top-level wrapper so pages can rely on `.litlens-layout` */}
+        <div className="min-h-screen litlens-layout bg-background text-foreground">
+          {children}
+        </div>
       </body>
     </html>
   );
