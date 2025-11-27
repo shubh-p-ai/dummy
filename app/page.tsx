@@ -1,255 +1,370 @@
+// app/page.tsx
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import * as z from "zod";
-
-import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { useChat } from "@ai-sdk/react";
-import { ArrowUp, Eraser, Loader2, Plus, PlusIcon, Square } from "lucide-react";
-import { MessageWall } from "@/components/messages/message-wall";
-import { ChatHeader } from "@/app/parts/chat-header";
-import { ChatHeaderBlock } from "@/app/parts/chat-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UIMessage } from "ai";
-import { useEffect, useState, useRef } from "react";
-import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const formSchema = z.object({
-  message: z
-    .string()
-    .min(1, "Message cannot be empty.")
-    .max(2000, "Message must be at most 2000 characters."),
-});
+/* If your project provides these components (used in your repo), import them:
+   - MessageWall
+   - ChatHeader / ChatHeaderBlock
+   - Button, Input, Avatar
+   Otherwise minimal fallbacks are provided below so this file renders. */
+import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
+import { Loader2, ArrowUp, Square, Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
 
-const STORAGE_KEY = 'chat-messages';
+/* ---------- Minimal fallback components (if you already have your own replace these imports) ---------- */
+const Button = (p: any) => <button {...p} />;
+const Input = (p: any) => <input {...p} />;
+const Avatar = (p: any) => <div {...p} />;
+const MessageWall = ({ messages }: { messages: any[] }) => (
+  <div className="space-y-4">
+    {messages.map((m: any) => (
+      <div key={m.id} className={`p-3 rounded-lg ${m.role === "assistant" ? "bg-card" : "bg-muted"}`}>
+        <div className="text-sm whitespace-pre-wrap">{m.text}</div>
+      </div>
+    ))}
+  </div>
+);
 
-type StorageData = {
-  messages: UIMessage[];
-  durations: Record<string, number>;
-};
+type Message = { id: string; role: "user" | "assistant"; text: string };
 
-const loadMessagesFromStorage = (): { messages: UIMessage[]; durations: Record<string, number> } => {
-  if (typeof window === 'undefined') return { messages: [], durations: {} };
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { messages: [], durations: {} };
+/* ---------- Page ---------- */
+export default function Page() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [status, setStatus] = useState<"idle" | "streaming" | "submitted">("idle");
+  const [selectedGenre, setSelectedGenre] = useState<string>("All");
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [selectedBook, setSelectedBook] = useState<any | null>(null);
 
-    const parsed = JSON.parse(stored);
-    return {
-      messages: parsed.messages || [],
-      durations: parsed.durations || {},
-    };
-  } catch (error) {
-    console.error('Failed to load messages from localStorage:', error);
-    return { messages: [], durations: {} };
-  }
-};
-
-const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, number>) => {
-  if (typeof window === 'undefined') return;
-  try {
-    const data: StorageData = { messages, durations };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.error('Failed to save messages to localStorage:', error);
-  }
-};
-
-export default function Chat() {
-  const [isClient, setIsClient] = useState(false);
-  const [durations, setDurations] = useState<Record<string, number>>({});
-  const welcomeMessageShownRef = useRef<boolean>(false);
-
-  const stored = typeof window !== 'undefined' ? loadMessagesFromStorage() : { messages: [], durations: {} };
-  const [initialMessages] = useState<UIMessage[]>(stored.messages);
-
-  const { messages, sendMessage, status, stop, setMessages } = useChat({
-    messages: initialMessages,
-  });
-
+  // simple local welcome
   useEffect(() => {
-    setIsClient(true);
-    setDurations(stored.durations);
-    setMessages(stored.messages);
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: `welcome-${Date.now()}`,
+          role: "assistant",
+          text: WELCOME_MESSAGE ?? `Hi — I'm ${AI_NAME ?? "LitLens"}. Tell me your reading taste and I'll recommend books.`,
+        },
+      ]);
+    }
   }, []);
 
-  useEffect(() => {
-    if (isClient) {
-      saveMessagesToStorage(messages, durations);
-    }
-  }, [durations, messages, isClient]);
+  // react-hook-form for input
+  const { register, handleSubmit, reset } = useForm<{ message: string }>({ defaultValues: { message: "" } });
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleDurationChange = (key: string, duration: number) => {
-    setDurations((prevDurations) => {
-      const newDurations = { ...prevDurations };
-      newDurations[key] = duration;
-      return newDurations;
-    });
-  };
+  function addUserMessage(text: string) {
+    const m: Message = { id: `u-${Date.now()}`, role: "user", text };
+    setMessages((s) => [...s, m]);
+    return m;
+  }
 
-  useEffect(() => {
-    if (isClient && initialMessages.length === 0 && !welcomeMessageShownRef.current) {
-      const welcomeMessage: UIMessage = {
-        id: `welcome-${Date.now()}`,
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: WELCOME_MESSAGE,
-          },
-        ],
-      };
-      setMessages([welcomeMessage]);
-      saveMessagesToStorage([welcomeMessage], {});
-      welcomeMessageShownRef.current = true;
-    }
-  }, [isClient, initialMessages.length, setMessages]);
+  async function simulateBotResponse(userText: string) {
+    setStatus("streaming");
+    // a placeholder: in your real app you'd call your /api/chat route
+    await new Promise((r) => setTimeout(r, 700));
+    const botMsg: Message = {
+      id: `b-${Date.now()}`,
+      role: "assistant",
+      text: `Got it — searching for books like: "${userText}". Here's a quick sample recommendation set.`,
+    };
+    setMessages((s) => [...s, botMsg]);
+    // produce demo recommendations
+    setRecommendations(sampleRecommendations(userText));
+    setStatus("idle");
+  }
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      message: "",
-    },
-  });
-
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    sendMessage({ text: data.message });
-    form.reset();
+  function onSubmit(data: { message: string }) {
+    const trimmed = data.message.trim();
+    if (!trimmed) return;
+    addUserMessage(trimmed);
+    reset();
+    simulateBotResponse(trimmed);
+    inputRef.current?.focus();
   }
 
   function clearChat() {
-    const newMessages: UIMessage[] = [];
-    const newDurations = {};
-    setMessages(newMessages);
-    setDurations(newDurations);
-    saveMessagesToStorage(newMessages, newDurations);
-    toast.success("Chat cleared");
+    setMessages([]);
+    setRecommendations([]);
+    setSelectedBook(null);
+    setTimeout(() => {
+      setMessages([{ id: `welcome-${Date.now()}`, role: "assistant", text: WELCOME_MESSAGE }]);
+    }, 50);
   }
 
+  // filter recommendations by genre
+  const filteredRecommendations = useMemo(() => {
+    if (selectedGenre === "All") return recommendations;
+    return recommendations.filter((r) => r.genre === selectedGenre);
+  }, [recommendations, selectedGenre]);
+
   return (
-    <div className="flex h-screen items-center justify-center font-sans dark:bg-black">
-      <main className="w-full dark:bg-black h-screen relative">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-black overflow-visible pb-16">
-          <div className="relative overflow-visible">
-            <ChatHeader>
-              <ChatHeaderBlock />
-              <ChatHeaderBlock className="justify-center items-center">
-                <Avatar
-                  className="size-8 ring-1 ring-primary"
-                >
-                  <AvatarImage src="/logo.png" />
-                  <AvatarFallback>
-                    <Image src="/logo.png" alt="Logo" width={36} height={36} />
-                  </AvatarFallback>
-                </Avatar>
-                <p className="tracking-tight">Chat with {AI_NAME}</p>
-              </ChatHeaderBlock>
-              <ChatHeaderBlock className="justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={clearChat}
-                >
-                  <Plus className="size-4" />
-                  {CLEAR_CHAT_TEXT}
-                </Button>
-              </ChatHeaderBlock>
-            </ChatHeader>
+    <div className="min-h-screen">
+      {/* Top header */}
+      <header className="w-full border-b border-input bg-card/60 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">L</Avatar>
+            <div>
+              <div className="text-sm font-medium">LitLens</div>
+              <div className="text-xs text-muted-foreground">AI book recommendations — powered by your reading taste</div>
+            </div>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <Button onClick={clearChat} className="px-3 py-1 rounded-md border border-input text-sm">
+              <Plus className="inline-block mr-2" /> New Chat
+            </Button>
+            <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} {OWNER_NAME}</div>
           </div>
         </div>
-        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
-          <div className="flex flex-col items-center justify-end min-h-full">
-            {isClient ? (
-              <>
-                <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
-                {status === "submitted" && (
-                  <div className="flex justify-start max-w-3xl w-full">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex justify-center max-w-2xl w-full">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+      </header>
+
+      {/* Main 3-column layout */}
+      <main className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_380px] gap-6">
+        {/* Left column: filters / user */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-20 space-y-4">
+            <div className="p-4 rounded-lg bg-card/60 border border-input">
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="w-12 h-12 rounded-md">U</Avatar>
+                <div>
+                  <div className="text-sm font-medium">Your profile</div>
+                  <div className="text-xs text-muted-foreground">Reader preferences</div>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground mb-2">Quick filters</div>
+              <div className="flex flex-col gap-2">
+                <select
+                  className="w-full rounded-md border border-input p-2 bg-transparent"
+                  value={selectedGenre}
+                  onChange={(e) => setSelectedGenre(e.target.value)}
+                >
+                  <option>All</option>
+                  <option>Fiction</option>
+                  <option>Mystery</option>
+                  <option>Sci-Fi</option>
+                  <option>Nonfiction</option>
+                  <option>Fantasy</option>
+                </select>
+                <button
+                  className="w-full rounded-md px-3 py-2 border border-input text-sm"
+                  onClick={() => {
+                    // quick prompt to suggest recommendations based on filters
+                    const genrePrompt = selectedGenre === "All" ? "recommend me some books" : `recommend me ${selectedGenre} books`;
+                    addUserMessage(`Find books: ${genrePrompt}`);
+                    simulateBotResponse(genrePrompt);
+                  }}
+                >
+                  Suggest books
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-card/60 border border-input">
+              <div className="text-sm font-medium mb-1">Reading history</div>
+              <div className="text-xs text-muted-foreground">(local demo only)</div>
+              <div className="mt-3 grid gap-2">
+                {messages
+                  .filter((m) => m.role === "user")
+                  .slice(-4)
+                  .reverse()
+                  .map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        addUserMessage(`Revisit: ${m.text}`);
+                        simulateBotResponse(m.text);
+                      }}
+                      className="text-left text-sm rounded-md px-2 py-1 hover:bg-muted"
+                    >
+                      {m.text.slice(0, 36)}{m.text.length > 36 ? "…" : ""}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Center column: chat */}
+        <section className="flex flex-col gap-4">
+          <div className="flex-1 overflow-auto min-h-[60vh] p-4 rounded-lg bg-card/60 border border-input">
+            <MessageWall messages={messages} />
+            {status === "streaming" && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="animate-spin" /> Generating recommendations…
               </div>
             )}
           </div>
-        </div>
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-black overflow-visible pt-13">
-          <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative overflow-visible">
-            <div className="message-fade-overlay" />
-            <div className="max-w-3xl w-full">
-              <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
-                <FieldGroup>
-                  <Controller
-                    name="message"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="chat-form-message" className="sr-only">
-                          Message
-                        </FieldLabel>
-                        <div className="relative h-13">
-                          <Input
-                            {...field}
-                            id="chat-form-message"
-                            className="h-15 pr-15 pl-5 bg-card rounded-[20px]"
-                            placeholder="Type your message here..."
-                            disabled={status === "streaming"}
-                            aria-invalid={fieldState.invalid}
-                            autoComplete="off"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                form.handleSubmit(onSubmit)();
-                              }
+
+          {/* Input bar */}
+          <form onSubmit={handleSubmit(onSubmit)} className="sticky bottom-4 bg-transparent">
+            <div className="max-w-3xl mx-auto flex items-center gap-3">
+              <div className="flex-1">
+                <Input
+                  {...register("message")}
+                  ref={(r: any) => {
+                    register("message").ref(r);
+                    inputRef.current = r;
+                  }}
+                  placeholder="Tell me what you like — authors, books, mood, or just 'surprise me'..."
+                  className="w-full rounded-2xl border border-input p-3 bg-card/30"
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(onSubmit)();
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="submit"
+                  className="rounded-full w-12 h-12 flex items-center justify-center border border-input"
+                >
+                  <ArrowUp />
+                </Button>
+                {status === "streaming" && (
+                  <Button
+                    onClick={() => setStatus("idle")}
+                    className="rounded-full w-12 h-12 flex items-center justify-center border border-input"
+                  >
+                    <Square />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </form>
+        </section>
+
+        {/* Right column: recommendations */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-20 space-y-4">
+            <div className="p-4 rounded-lg bg-card/60 border border-input">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-sm font-medium">Recommendations</div>
+                  <div className="text-xs text-muted-foreground">Based on your chat</div>
+                </div>
+                <div className="text-xs text-muted-foreground">{filteredRecommendations.length} items</div>
+              </div>
+
+              <div className="mt-3 space-y-3 max-h-[60vh] overflow-auto pr-2">
+                {filteredRecommendations.length === 0 && (
+                  <div className="text-xs text-muted-foreground">No recommendations yet — ask LitLens for suggestions.</div>
+                )}
+
+                {filteredRecommendations.map((book) => (
+                  <article
+                    key={book.id}
+                    className="p-2 rounded-md border border-input flex gap-3 hover:shadow-sm hover:scale-[1.01] transition-all"
+                    onClick={() => setSelectedBook(book)}
+                  >
+                    <div className="w-14 flex-shrink-0">
+                      <Image src={book.cover} width={92} height={128} alt={book.title} className="rounded-sm object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold leading-tight">{book.title}</div>
+                      <div className="text-xs text-muted-foreground">{book.author}</div>
+                      <div className="text-xs mt-2 line-clamp-2 text-muted-foreground">{book.short}</div>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="text-xs text-muted-foreground">⭐ {book.rating} · {book.genre}</div>
+                        <div className="flex gap-2">
+                          <a className="text-xs underline" href={book.goodreads} target="_blank" rel="noreferrer">Goodreads</a>
+                          <button
+                            className="text-xs px-2 py-0.5 rounded border border-input"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // save action: for now just set selected
+                              setSelectedBook(book);
                             }}
-                          />
-                          {(status == "ready" || status == "error") && (
-                            <Button
-                              className="absolute right-3 top-3 rounded-full"
-                              type="submit"
-                              disabled={!field.value.trim()}
-                              size="icon"
-                            >
-                              <ArrowUp className="size-4" />
-                            </Button>
-                          )}
-                          {(status == "streaming" || status == "submitted") && (
-                            <Button
-                              className="absolute right-2 top-2 rounded-full"
-                              size="icon"
-                              onClick={() => {
-                                stop();
-                              }}
-                            >
-                              <Square className="size-4" />
-                            </Button>
-                          )}
+                          >
+                            Save
+                          </button>
                         </div>
-                      </Field>
-                    )}
-                  />
-                </FieldGroup>
-              </form>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            {/* selected book preview */}
+            <div className="p-4 rounded-lg bg-card/60 border border-input">
+              <div className="text-sm font-medium mb-2">Selected book</div>
+              {!selectedBook ? (
+                <div className="text-xs text-muted-foreground">Click a recommendation to see details</div>
+              ) : (
+                <div className="flex gap-3">
+                  <div className="w-20 flex-shrink-0">
+                    <Image src={selectedBook.cover} width={120} height={170} alt={selectedBook.title} className="rounded" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{selectedBook.title}</div>
+                    <div className="text-xs text-muted-foreground">{selectedBook.author}</div>
+                    <div className="mt-2 text-xs line-clamp-4 text-muted-foreground">{selectedBook.long}</div>
+                    <div className="mt-3 flex gap-2">
+                      <a href={selectedBook.goodreads} target="_blank" rel="noreferrer" className="text-sm underline">Open on Goodreads</a>
+                      <button className="px-3 py-1 border border-input rounded-md text-sm" onClick={() => alert("Saved (demo)")}>Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          <div className="w-full px-5 py-3 items-center flex justify-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {OWNER_NAME}&nbsp;<Link href="/terms" className="underline">Terms of Use</Link>&nbsp;Powered by&nbsp;<Link href="https://ringel.ai/" className="underline">Ringel.AI</Link>
-          </div>
-        </div>
+        </aside>
       </main>
-    </div >
+    </div>
   );
+}
+
+/* ---------- demo recommendation generator (replace with real backend results) ---------- */
+function sampleRecommendations(query: string) {
+  const seed = [
+    {
+      id: "b1",
+      title: "The Night Watchman",
+      author: "Louise Erdrich",
+      rating: 4.1,
+      short: "A moving novel about family and resilience.",
+      long: "An absorbing novel about a Native American community... (demo blurb).",
+      cover: "/demo/covers/night-watchman.jpg",
+      genre: "Fiction",
+      goodreads: "https://www.goodreads.com/",
+    },
+    {
+      id: "b2",
+      title: "Project Hail Mary",
+      author: "Andy Weir",
+      rating: 4.5,
+      short: "A thrilling solo space mission with science at heart.",
+      long: "A near-future solo astronaut wakes with no memory and must save humanity... (demo blurb).",
+      cover: "/demo/covers/project-hail-mary.jpg",
+      genre: "Sci-Fi",
+      goodreads: "https://www.goodreads.com/",
+    },
+    {
+      id: "b3",
+      title: "The Silent Patient",
+      author: "Alex Michaelides",
+      rating: 4.0,
+      short: "A gripping psychological thriller with a twist.",
+      long: "A psychotherapist tries to treat a silent patient who shot her husband... (demo blurb).",
+      cover: "/demo/covers/silent-patient.jpg",
+      genre: "Mystery",
+      goodreads: "https://www.goodreads.com/",
+    },
+  ];
+
+  // return seeded list plus some query-driven re-order
+  if (!query) return seed;
+  const q = query.toLowerCase();
+  return seed
+    .map((s, i) => ({
+      ...s,
+      rating: Math.round((s.rating + (q.includes("space") ? 0.4 : 0) - (i * 0.05)) * 10) / 10,
+    }))
+    .sort((a, b) => b.rating - a.rating);
 }
