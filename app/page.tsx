@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-// Changed icon from Plus to Eraser for "Clear Chat" / "New Recommendation"
 import { ArrowUp, Eraser, Loader2, Square } from "lucide-react"; 
 import { MessageWall } from "@/components/messages/message-wall";
 import { ChatHeader } from "@/app/parts/chat-header";
@@ -138,34 +137,38 @@ export default function Chat() {
   }
 
   return (
-    // Applied dark:bg-background to main div for consistency with globals.css changes
+    // Applied dark:bg-background to match the SparkGPT theme color changes
     <div className="flex h-screen items-center justify-center font-sans dark:bg-background">
       <main className="w-full dark:bg-background h-screen relative">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-b from-background via-background/50 to-transparent dark:bg-background overflow-visible pb-16">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background dark:bg-background overflow-visible pb-16 shadow-sm">
           <div className="relative overflow-visible">
             <ChatHeader>
-              <ChatHeaderBlock />
-              <ChatHeaderBlock className="justify-center items-center">
-                <Avatar
-                  className="size-8 ring-1 ring-primary"
-                >
-                  <AvatarImage src="/logo.png" />
-                  <AvatarFallback>
-                    {/* Assuming you'll update /logo.png with a 'LitLens' logo, 
-                        the AvatarFallback remains the same */}
-                    <Image src="/logo.png" alt="Logo" width={36} height={36} />
-                  </AvatarFallback>
-                </Avatar>
-                <p className="tracking-tight">Chat with {AI_NAME}</p>
+              {/* Left block for potential back/menu button in SparkGPT style */}
+              <ChatHeaderBlock className="justify-start">
+                  {/* Avatar/Logo placement for left-side display */}
+                  <Avatar
+                    className="size-8 ring-1 ring-primary"
+                  >
+                    <AvatarImage src="/logo.png" />
+                    <AvatarFallback>
+                      <Image src="/logo.png" alt="Logo" width={36} height={36} />
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="tracking-tight ml-2">Chat with {AI_NAME}</p>
               </ChatHeaderBlock>
+              {/* Center block for chat name (using default app name) */}
+              <ChatHeaderBlock className="justify-center items-center">
+                {/* Keeping this empty to let the title sit naturally */}
+              </ChatHeaderBlock>
+              {/* Right block for Clear Chat button (uses Eraser icon for better clarity) */}
               <ChatHeaderBlock className="justify-end">
                 <Button
+                  // Using 'outline' and text-primary to use the purple primary color
                   variant="outline"
                   size="sm"
-                  className="cursor-pointer"
+                  className="cursor-pointer border-primary text-primary hover:bg-primary/5"
                   onClick={clearChat}
                 >
-                  {/* Changed icon from Plus to Eraser */}
                   <Eraser className="size-4 mr-1" />
                   {CLEAR_CHAT_TEXT}
                 </Button>
@@ -173,7 +176,7 @@ export default function Chat() {
             </ChatHeader>
           </div>
         </div>
-        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px]">
+        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
               <>
@@ -191,8 +194,9 @@ export default function Chat() {
             )}
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-linear-to-t from-background via-background/50 to-transparent dark:bg-background overflow-visible pt-13">
-          <div className="w-full px-5 pt-5 pb-1 items-center flex justify-center relative overflow-visible">
+        {/* Input area background should be solid white/background to match the clean look */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background dark:bg-background overflow-visible pt-5 shadow-lg">
+          <div className="w-full px-5 pt-0 pb-1 items-center flex justify-center relative overflow-visible">
             <div className="message-fade-overlay" />
             <div className="max-w-3xl w-full">
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
@@ -209,9 +213,9 @@ export default function Chat() {
                           <Input
                             {...field}
                             id="chat-form-message"
-                            className="h-15 pr-15 pl-5 bg-card rounded-[20px]"
-                            // Updated placeholder text to be book-specific
-                            placeholder="Recommend me a sci-fi book, or a classic novel..." 
+                            // Increased border radius to match the rounded look in the image
+                            className="h-15 pr-15 pl-5 bg-input border-border rounded-[25px]" 
+                            placeholder="Recommend me a fantasy novel, or a biography..."
                             disabled={status === "streaming"}
                             aria-invalid={fieldState.invalid}
                             autoComplete="off"
@@ -224,7 +228,8 @@ export default function Chat() {
                           />
                           {(status == "ready" || status == "error") && (
                             <Button
-                              className="absolute right-3 top-3 rounded-full"
+                              // Send button uses primary color (deep purple)
+                              className="absolute right-3 top-3 rounded-full bg-primary hover:bg-primary/90"
                               type="submit"
                               disabled={!field.value.trim()}
                               size="icon"
