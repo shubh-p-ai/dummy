@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import { ArrowUp, Eraser, Loader2, Square, BookOpen, Star } from "lucide-react"; // Added Star and BookOpen
+import { ArrowUp, Eraser, Loader2, Square, BookOpen, Star } from "lucide-react";
 import { MessageWall } from "@/components/messages/message-wall";
 import { ChatHeader } from "@/app/parts/chat-header";
 import { ChatHeaderBlock } from "@/app/parts/chat-header";
@@ -25,7 +25,7 @@ import { useEffect, useState, useRef } from "react";
 import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming you have a Card component
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 // --- Book Data and BookSuggestions Component ---
 
@@ -65,51 +65,57 @@ const TOP_RATED_BOOKS: Book[] = [
 
 // New component for displaying book suggestions
 const BookSuggestions = () => (
-  <div className="hidden lg:block w-[300px] xl:w-[350px] p-5 pt-[88px] h-screen overflow-y-auto bg-background border-l border-gray-800 fixed right-0 top-0">
-    <h3 className="text-xl font-bold mb-5 text-white flex items-center">
-      <BookOpen className="size-5 mr-2 text-purple-400" />
-      Top Rated Reads
-    </h3>
-    <div className="space-y-4">
-      {TOP_RATED_BOOKS.map((book, index) => (
-        <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-xl shadow-lg">
-          <CardHeader className="p-4 flex flex-row items-start">
-             <div className="flex-shrink-0 w-16 h-24 bg-gray-700 rounded-md overflow-hidden relative mr-4">
-                {/* Placeholder for cover image */}
-                <Image
-                    src={book.imageUrl}
-                    alt={`${book.title} cover`}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    className="opacity-70"
-                />
-             </div>
-             <div>
-                <CardTitle className="text-lg font-semibold leading-snug text-purple-400">
-                    {book.title}
-                </CardTitle>
-                <CardDescription className="text-sm text-gray-400 mt-1">
-                    {book.author}
-                </CardDescription>
-             </div>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 text-sm">
-            <p className="text-gray-400 mb-2">
-                <span className="font-medium text-gray-300">Genre:</span> {book.genre}
-            </p>
-            <div className="flex items-center text-yellow-400">
-                <Star className="size-4 fill-yellow-400 mr-1" />
-                <span className="font-bold">{book.rating}</span>/5
-            </div>
-          </CardContent>
-          <CardFooter className="p-4 pt-0">
-             {/* Example link - replace with a real link */}
-             <Link href="#" className="text-xs text-purple-300 hover:text-purple-400 underline transition-colors">
-                View on GoodReads
-             </Link>
-          </CardFooter>
-        </Card>
-      ))}
+  <div className="hidden lg:block w-[300px] xl:w-[350px] bg-background border-l border-gray-800 fixed right-0 top-0 h-screen flex flex-col">
+    {/* Fixed Heading */}
+    <div className="p-5 pt-[88px] bg-background z-10 border-b border-gray-800">
+      <h3 className="text-xl font-bold text-white flex items-center">
+        <BookOpen className="size-5 mr-2 text-purple-400" />
+        Top Rated Reads
+      </h3>
+    </div>
+    
+    {/* Scrollable Book List */}
+    <div className="flex-grow overflow-y-auto scrollbar-hide p-5">
+      <div className="space-y-4">
+        {TOP_RATED_BOOKS.map((book, index) => (
+          <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-xl shadow-lg">
+            <CardHeader className="p-4 flex flex-row items-start">
+               <div className="flex-shrink-0 w-16 h-24 bg-gray-700 rounded-md overflow-hidden relative mr-4">
+                  {/* Placeholder for cover image */}
+                  <Image
+                      src={book.imageUrl}
+                      alt={`${book.title} cover`}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      className="opacity-70"
+                  />
+               </div>
+               <div>
+                  <CardTitle className="text-lg font-semibold leading-snug text-purple-400">
+                      {book.title}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-400 mt-1">
+                      {book.author}
+                  </CardDescription>
+               </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 text-sm">
+              <p className="text-gray-400 mb-2">
+                  <span className="font-medium text-gray-300">Genre:</span> {book.genre}
+              </p>
+              <div className="flex items-center text-yellow-400">
+                  <Star className="size-4 fill-yellow-400 mr-1" />
+                  <span className="font-bold">{book.rating}</span>/5
+              </div>
+            </CardContent>
+            <CardFooter className="p-4 pt-0">
+               <Link href="#" className="text-xs text-purple-300 hover:text-purple-400 underline transition-colors">
+                  View on GoodReads
+               </Link>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -239,10 +245,10 @@ function clearChat() {
     setDurations(newDurations);
     // 3. Update localStorage so the message persists after refresh
     saveMessagesToStorage(newMessages, newDurations);
-    // Optional: Reset the ref to allow the initial welcome message logic to run 
+    // Optional: Reset the ref to allow the initial welcome message logic to run
     // again if the component were to be unmounted and remounted without a full page refresh
     // Though not strictly necessary with the fix above, it ensures consistency.
-    welcomeMessageShownRef.current = true; 
+    welcomeMessageShownRef.current = true;
     toast.success("Chat cleared");
   }
 
@@ -287,8 +293,8 @@ function clearChat() {
         <div className="flex h-full w-full">
             {/* Chat Wall Container: Takes all available width, adjusting for suggestions on large screens */}
             {/* max-w-[calc(100vw-300px)] applies on lg: screens */}
-            <div className="flex-grow min-w-0"> 
-                <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-350px)]"> 
+            <div className="flex-grow min-w-0">
+                <div className="h-screen overflow-y-auto scrollbar-hide px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-350px)]">
                   <div className="flex flex-col items-center justify-end min-h-full">
                     {isClient ? (
                       <>
@@ -334,7 +340,7 @@ function clearChat() {
                             {...field}
                             id="chat-form-message"
                             // Input now uses bg-input (dark gray) and rounded-[25px]
-                            className="h-15 pr-15 pl-5 bg-purple-600 border-border rounded-[25px] placeholder:text-white" 
+                            className="h-15 pr-15 pl-5 bg-purple-600 border-border rounded-[25px] placeholder:text-white"
                             placeholder="Recommend me a fantasy novel, or a biography..."
                             disabled={status === "streaming"}
                             aria-invalid={fieldState.invalid}
