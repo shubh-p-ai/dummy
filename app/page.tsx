@@ -150,7 +150,7 @@ export default function Chat() {
                   >
                     <AvatarImage src="/logo.png" />
                     <AvatarFallback>
-                      <Image src="/logo.png" alt="Logo" width={36} height={36} />
+                      <Image src="/logo.png" alt="Logo" width={50} height={50} />
                     </AvatarFallback>
                   </Avatar>
                   <p className="ml-3 text-2xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">{AI_NAME}</p>
