@@ -137,15 +137,14 @@ export default function Chat() {
   }
 
   return (
-    // Applied dark:bg-background to match the SparkGPT theme color changes
-    <div className="flex h-screen items-center justify-center font-sans dark:bg-background">
-      <main className="w-full dark:bg-background h-screen relative">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-background dark:bg-background overflow-visible pb-16 shadow-sm">
+    // Ensure main container is fully dark
+    <div className="flex h-screen items-center justify-center font-sans bg-background">
+      <main className="w-full bg-background h-screen relative">
+        {/* Header: Solid background, no fade/transparency */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background overflow-visible pb-4 shadow-sm">
           <div className="relative overflow-visible">
             <ChatHeader>
-              {/* Left block for potential back/menu button in SparkGPT style */}
               <ChatHeaderBlock className="justify-start">
-                  {/* Avatar/Logo placement for left-side display */}
                   <Avatar
                     className="size-8 ring-1 ring-primary"
                   >
@@ -156,14 +155,11 @@ export default function Chat() {
                   </Avatar>
                   <p className="tracking-tight ml-2">Chat with {AI_NAME}</p>
               </ChatHeaderBlock>
-              {/* Center block for chat name (using default app name) */}
               <ChatHeaderBlock className="justify-center items-center">
-                {/* Keeping this empty to let the title sit naturally */}
               </ChatHeaderBlock>
-              {/* Right block for Clear Chat button (uses Eraser icon for better clarity) */}
               <ChatHeaderBlock className="justify-end">
                 <Button
-                  // Using 'outline' and text-primary to use the purple primary color
+                  // Use primary color for 'New Chat' button text/icon
                   variant="outline"
                   size="sm"
                   className="cursor-pointer border-primary text-primary hover:bg-primary/5"
@@ -176,6 +172,7 @@ export default function Chat() {
             </ChatHeader>
           </div>
         </div>
+        {/* Chat Wall: Use solid background class */}
         <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container">
           <div className="flex flex-col items-center justify-end min-h-full">
             {isClient ? (
@@ -194,10 +191,10 @@ export default function Chat() {
             )}
           </div>
         </div>
-        {/* Input area background should be solid white/background to match the clean look */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background dark:bg-background overflow-visible pt-5 shadow-lg">
+        {/* Footer/Input Area: Solid background, no fade/transparency, and dark color */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background overflow-visible pt-5 shadow-lg">
           <div className="w-full px-5 pt-0 pb-1 items-center flex justify-center relative overflow-visible">
-            <div className="message-fade-overlay" />
+            {/* Removed message-fade-overlay class here */}
             <div className="max-w-3xl w-full">
               <form id="chat-form" onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
@@ -213,7 +210,7 @@ export default function Chat() {
                           <Input
                             {...field}
                             id="chat-form-message"
-                            // Increased border radius to match the rounded look in the image
+                            // Input now uses bg-input (dark gray) and rounded-[25px]
                             className="h-15 pr-15 pl-5 bg-input border-border rounded-[25px]" 
                             placeholder="Recommend me a fantasy novel, or a biography..."
                             disabled={status === "streaming"}
@@ -228,7 +225,7 @@ export default function Chat() {
                           />
                           {(status == "ready" || status == "error") && (
                             <Button
-                              // Send button uses primary color (deep purple)
+                              // Send button uses solid primary color (magenta/purple)
                               className="absolute right-3 top-3 rounded-full bg-primary hover:bg-primary/90"
                               type="submit"
                               disabled={!field.value.trim()}
@@ -261,6 +258,6 @@ export default function Chat() {
           </div>
         </div>
       </main>
-    </div >
+    </div>
   );
 }
