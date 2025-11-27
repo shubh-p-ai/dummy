@@ -231,7 +231,7 @@ export default function Chat() {
                               disabled={!field.value.trim()}
                               size="icon"
                             >
-                              <ArrowUp className="size-4 text-white"" />
+                              <ArrowUp className="size-4 text-white" />
                             </Button>
                           )}
                           {(status == "streaming" || status == "submitted") && (
