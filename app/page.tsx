@@ -65,51 +65,54 @@ const TOP_RATED_BOOKS: Book[] = [
 
 // New component for displaying book suggestions
 const BookSuggestions = () => (
-  <div className="hidden lg:block w-[300px] xl:w-[350px] bg-background border-l border-gray-800 fixed right-0 top-0 h-screen flex flex-col">
-    {/* Fixed Heading */}
-    <div className="p-5 pt-[88px] bg-background z-10 border-b border-gray-800">
+  // REDUCED WIDTH: w-[250px] for lg, w-[300px] for xl
+  <div className="hidden lg:block w-[250px] xl:w-[300px] bg-background border-l border-gray-800 fixed right-0 top-0 h-screen flex flex-col">
+    
+    {/* Fixed Heading (pt-[88px] accounts for the chat header height) */}
+    <div className="p-4 pt-[88px] bg-background z-10 border-b border-gray-800 flex-shrink-0">
       <h3 className="text-xl font-bold text-white flex items-center">
         <BookOpen className="size-5 mr-2 text-purple-400" />
         Top Rated Reads
       </h3>
     </div>
     
-    {/* Scrollable Book List */}
-    <div className="flex-grow overflow-y-auto scrollbar-hide p-5">
-      <div className="space-y-4">
+    {/* Scrollable Book List - Uses custom-scrollbar-style */}
+    <div className="flex-grow overflow-y-auto custom-scrollbar-style p-4"> 
+      <div className="space-y-3"> {/* Reduced vertical spacing */}
         {TOP_RATED_BOOKS.map((book, index) => (
-          <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-xl shadow-lg">
-            <CardHeader className="p-4 flex flex-row items-start">
-               <div className="flex-shrink-0 w-16 h-24 bg-gray-700 rounded-md overflow-hidden relative mr-4">
-                  {/* Placeholder for cover image */}
-                  <Image
-                      src={book.imageUrl}
-                      alt={`${book.title} cover`}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      className="opacity-70"
-                  />
+          <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-lg shadow-md"> {/* Reduced card styling */}
+            <CardHeader className="p-3 flex flex-row items-start"> {/* Reduced padding */}
+               {/* REDUCED IMAGE SIZE: w-12 h-18 */}
+               <div className="flex-shrink-0 w-12 h-18 bg-gray-700 rounded-sm overflow-hidden relative mr-3"> 
+                 <Image
+                    src={book.imageUrl}
+                    alt={`${book.title} cover`}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    className="opacity-80"
+                 />
                </div>
                <div>
-                  <CardTitle className="text-lg font-semibold leading-snug text-purple-400">
+                  {/* REDUCED TITLE SIZE: text-base */}
+                  <CardTitle className="text-base font-semibold leading-snug text-purple-400 line-clamp-2">
                       {book.title}
                   </CardTitle>
-                  <CardDescription className="text-sm text-gray-400 mt-1">
+                  <CardDescription className="text-xs text-gray-400 mt-1"> {/* Reduced description size */}
                       {book.author}
                   </CardDescription>
                </div>
             </CardHeader>
-            <CardContent className="p-4 pt-0 text-sm">
-              <p className="text-gray-400 mb-2">
+            <CardContent className="px-3 pb-2 pt-0 text-xs"> {/* Reduced padding and text size */}
+              <p className="text-gray-400 mb-1 line-clamp-1">
                   <span className="font-medium text-gray-300">Genre:</span> {book.genre}
               </p>
               <div className="flex items-center text-yellow-400">
-                  <Star className="size-4 fill-yellow-400 mr-1" />
+                  <Star className="size-3 fill-yellow-400 mr-1" />
                   <span className="font-bold">{book.rating}</span>/5
               </div>
             </CardContent>
-            <CardFooter className="p-4 pt-0">
-               <Link href="#" className="text-xs text-purple-300 hover:text-purple-400 underline transition-colors">
+            <CardFooter className="px-3 pb-3 pt-0">
+               <Link href="#" className="text-[10px] text-purple-300 hover:text-purple-400 underline transition-colors">
                   View on GoodReads
                </Link>
             </CardFooter>
@@ -292,9 +295,10 @@ function clearChat() {
         {/* --- Main Content Area: Chat Wall and Suggestions --- */}
         <div className="flex h-full w-full">
             {/* Chat Wall Container: Takes all available width, adjusting for suggestions on large screens */}
-            {/* max-w-[calc(100vw-300px)] applies on lg: screens */}
+            {/* UPDATED MAX-WIDTH to match new BookSuggestions width */}
             <div className="flex-grow min-w-0">
-                <div className="h-screen overflow-y-auto scrollbar-hide px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-350px)]">
+                {/* ADDED custom-scrollbar-style to chat wall */}
+                <div className="h-screen overflow-y-auto custom-scrollbar-style px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container lg:max-w-[calc(100vw-250px)] xl:max-w-[calc(100vw-300px)]">
                   <div className="flex flex-col items-center justify-end min-h-full">
                     {isClient ? (
                       <>
@@ -321,7 +325,8 @@ function clearChat() {
 
 
         {/* Footer/Input Area: Solid background, no fade/transparency, and dark color */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background overflow-visible pt-5 shadow-lg lg:right-[300px] xl:right-[350px]">
+        {/* UPDATED RIGHT MARGIN to match new BookSuggestions width */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background overflow-visible pt-5 shadow-lg lg:right-[250px] xl:right-[300px]">
           <div className="w-full px-5 pt-0 pb-1 items-center flex justify-center relative overflow-visible">
             {/* Removed message-fade-overlay class here */}
             <div className="max-w-3xl w-full">
