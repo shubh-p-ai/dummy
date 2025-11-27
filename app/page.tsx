@@ -65,6 +65,118 @@ const saveMessagesToStorage = (messages: UIMessage[], durations: Record<string, 
   }
 };
 
+/**
+ * Types used for parsed book objects (expected from assistant JSON).
+ */
+type ParsedAltPick = {
+  title?: string;
+  reason?: string;
+};
+
+type ParsedBook = {
+  title: string;
+  author?: string;
+  shortReason?: string;
+  formats?: string[];
+  difficulty?: string;
+  altPick?: ParsedAltPick;
+};
+
+/**
+ * Attempts to extract JSON representing an array of books from assistant message text.
+ * Looks for a fenced ```json ... ``` block, otherwise tries to find any JSON array in the string.
+ * Returns parsed array of ParsedBook or null if none.
+ */
+function tryParseBooksFromText(text: string): ParsedBook[] | null {
+  if (!text) return null;
+
+  // 1) Try fenced ```json ... ``` blocks first
+  const fencedMatch = text.match(/```json\s*([\s\S]*?)```/i);
+  const candidate = fencedMatch ? fencedMatch[1] : null;
+
+  // 2) If no fenced block, attempt to find a raw JSON array in the text
+  const rawArrayMatch = candidate ? null : text.match(/(\[([\s\S]*?)\])/m);
+
+  const jsonString = candidate ?? (rawArrayMatch ? rawArrayMatch[1] : null);
+
+  if (!jsonString) return null;
+
+  try {
+    const parsed = JSON.parse(jsonString);
+    if (!Array.isArray(parsed)) return null;
+
+    // Map/validate roughly to the ParsedBook shape
+    const books: ParsedBook[] = parsed.map((b: any) => ({
+      title: String(b.title ?? b.name ?? ""),
+      author: b.author ?? b.by ?? "",
+      shortReason: b.shortReason ?? b.reason ?? b.description ?? "",
+      formats: Array.isArray(b.formats) ? b.formats.map(String) : [],
+      difficulty: b.difficulty ?? b.level ?? "",
+      altPick: b.altPick ?? b.alternative ?? undefined,
+    })).filter(b => b.title && b.title.trim().length > 0);
+
+    return books.length ? books : null;
+  } catch (err) {
+    // invalid JSON — ignore silently
+    return null;
+  }
+}
+
+/**
+ * Helper: get full text content from a UIMessage (concatenate parts)
+ */
+function getMessageText(msg: UIMessage) {
+  if (!msg.parts || !Array.isArray(msg.parts)) return "";
+  return msg.parts.map(p => (typeof p === "string" ? p : (p as any).text ?? "")).join("\n");
+}
+
+/**
+ * RecommendationCard component
+ */
+function RecommendationCard({ book, onShowSimilar } : { book: ParsedBook; onShowSimilar?: (title: string) => void }) {
+  return (
+    <div className="border rounded-2xl p-4 shadow-sm bg-card">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold text-lg leading-tight">{book.title}</div>
+          {book.author ? <div className="text-sm text-gray-600 mb-2">by {book.author}</div> : null}
+          {book.shortReason ? <div className="text-sm mb-3">{book.shortReason}</div> : null}
+          <div className="text-xs text-gray-600 mb-2">Formats: {book.formats && book.formats.length ? book.formats.join(", ") : "N/A"}</div>
+          <div className="text-xs mb-3">Difficulty: <span className="font-medium">{book.difficulty || "Unknown"}</span></div>
+          {book.altPick && (book.altPick.title || book.altPick.reason) ? (
+            <div className="bg-gray-50 p-2 rounded">
+              <div className="text-xs font-medium">Alternative</div>
+              <div className="text-xs">{book.altPick.title || ""}{book.altPick.reason ? ` — ${book.altPick.reason}` : ""}</div>
+            </div>
+          ) : null}
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={() => onShowSimilar?.(book.title)}
+            className="text-xs px-3 py-2 rounded-full border hover:bg-muted-foreground/5"
+            aria-label={`Show similar to ${book.title}`}
+          >
+            Show similar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * RecommendationGrid component
+ */
+function RecommendationGrid({ books, onShowSimilar } : { books: ParsedBook[]; onShowSimilar?: (title: string) => void }) {
+  return (
+    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl px-2">
+      {books.map((b, i) => (
+        <RecommendationCard key={i} book={b} onShowSimilar={onShowSimilar} />
+      ))}
+    </div>
+  );
+}
+
 export default function Chat() {
   const [isClient, setIsClient] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
@@ -136,6 +248,21 @@ export default function Chat() {
     toast.success("Chat cleared");
   }
 
+  /**
+   * UI-only: find parsed books from the latest assistant message (if any).
+   * This doesn't alter messages or backend; it just renders UI if backend included JSON.
+   */
+  const latestAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+  const parsedBooks = latestAssistantMessage ? tryParseBooksFromText(getMessageText(latestAssistantMessage)) : null;
+
+  // Handler for the CTA on recommendation cards. This just sends a follow-up user message
+  // asking for similar books. This keeps backend unchanged but makes the chat interactive.
+  const handleShowSimilar = (title?: string) => {
+    if (!title) return;
+    // Insert a short user message asking for similar books
+    sendMessage({ text: `Show me books similar to "${title}"` });
+  };
+
   return (
     <div className="flex h-screen items-center justify-center font-sans dark:bg-black">
       <main className="w-full dark:bg-black h-screen relative">
@@ -178,6 +305,11 @@ export default function Chat() {
                     <Loader2 className="size-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
+
+                {/* Book Recommendation Grid (UI-only): renders if latest assistant message contained structured JSON */}
+                {parsedBooks && parsedBooks.length > 0 ? (
+                  <RecommendationGrid books={parsedBooks} onShowSimilar={handleShowSimilar} />
+                ) : null}
               </>
             ) : (
               <div className="flex justify-center max-w-2xl w-full">
