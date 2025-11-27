@@ -66,7 +66,7 @@ const TOP_RATED_BOOKS: Book[] = [
 // New component for displaying book suggestions
 const BookSuggestions = () => (
   // REDUCED WIDTH: w-[250px] for lg, w-[300px] for xl
-  <div className="hidden lg:block w-[250px] xl:w-[300px] bg-background border-l border-gray-800 fixed right-0 top-0 h-screen flex flex-col">
+  <div className="hidden lg:block w-[300px] xl:w-[300px] bg-background border-l border-gray-800 fixed right-0 top-0 h-screen flex flex-col">
     
     {/* Fixed Heading (pt-[88px] accounts for the chat header height) */}
     <div className="p-4 pt-[88px] bg-background z-10 border-b border-gray-800 flex-shrink-0">
@@ -83,7 +83,7 @@ const BookSuggestions = () => (
           <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-lg shadow-md"> {/* Reduced card styling */}
             <CardHeader className="p-3 flex flex-row items-start"> {/* Reduced padding */}
                {/* REDUCED IMAGE SIZE: w-12 h-18 */}
-               <div className="flex-shrink-0 w-12 h-18 bg-gray-700 rounded-sm overflow-hidden relative mr-3"> 
+               <div className="flex-shrink-0 w-15 h-15 bg-gray-700 rounded-sm overflow-hidden relative mr-3"> 
                  <Image
                     src={book.imageUrl}
                     alt={`${book.title} cover`}
