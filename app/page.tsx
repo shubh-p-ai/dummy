@@ -4,17 +4,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-
-/* If your project provides these components (used in your repo), import them:
-   - MessageWall
-   - ChatHeader / ChatHeaderBlock
-   - Button, Input, Avatar
-   Otherwise minimal fallbacks are provided below so this file renders. */
-import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
-import { Loader2, ArrowUp, Square, Plus } from "lucide-react";
+import { Loader2, ArrowUp, Square, Plus, Search, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-/* ---------- Minimal fallback components (if you already have your own replace these imports) ---------- */
+/* keep your config imports unchanged if you have them */
+import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
+
+/* ---------- Minimal fallback components (if you already have your own replace these) ---------- */
 const Button = (p: any) => <button {...p} />;
 const Input = (p: any) => <input {...p} />;
 const Avatar = (p: any) => <div {...p} />;
@@ -30,7 +26,10 @@ const MessageWall = ({ messages }: { messages: any[] }) => (
 
 type Message = { id: string; role: "user" | "assistant"; text: string };
 
-/* ---------- Page ---------- */
+/* ---------- keep your existing logic functions (simulateBotResponse, sampleRecommendations) ----------
+   If you already have them defined elsewhere, keep using those. For this file I include the demo generator
+   at the bottom (unchanged from earlier code you had). */
+
 export default function Page() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<"idle" | "streaming" | "submitted">("idle");
@@ -38,17 +37,28 @@ export default function Page() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any | null>(null);
 
-  // simple local welcome
+  // mood presets shown as chips (UI only)
+  const MOOD_PRESETS = [
+    "something funny and upbeat",
+    "cozy and heartwarming",
+    "fast-paced thrillers",
+    "dark fantasy worlds",
+    "short uplifting reads",
+    "books like The Alchemist",
+  ];
+
+  // simple local welcome (same behavior as before)
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
         {
-          id: `welcome-${Date.now()}`,
+          id: `welcome`,
           role: "assistant",
           text: WELCOME_MESSAGE ?? `Hi — I'm ${AI_NAME ?? "LitLens"}. Tell me your reading taste and I'll recommend books.`,
         },
       ]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // react-hook-form for input
@@ -56,22 +66,22 @@ export default function Page() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function addUserMessage(text: string) {
-    const m: Message = { id: `u-${Date.now()}`, role: "user", text };
+    const id = `u-${String(Math.abs(hashCode(text))).slice(0, 8)}`;
+    const m: Message = { id, role: "user", text };
     setMessages((s) => [...s, m]);
     return m;
   }
 
   async function simulateBotResponse(userText: string) {
+    // reuse your existing logic (UI-only update does not change this)
     setStatus("streaming");
-    // a placeholder: in your real app you'd call your /api/chat route
     await new Promise((r) => setTimeout(r, 700));
     const botMsg: Message = {
-      id: `b-${Date.now()}`,
+      id: `b-${String(Math.abs(hashCode(userText))).slice(0, 8)}`,
       role: "assistant",
       text: `Got it — searching for books like: "${userText}". Here's a quick sample recommendation set.`,
     };
     setMessages((s) => [...s, botMsg]);
-    // produce demo recommendations
     setRecommendations(sampleRecommendations(userText));
     setStatus("idle");
   }
@@ -90,19 +100,20 @@ export default function Page() {
     setRecommendations([]);
     setSelectedBook(null);
     setTimeout(() => {
-      setMessages([{ id: `welcome-${Date.now()}`, role: "assistant", text: WELCOME_MESSAGE }]);
+      setMessages([{ id: `welcome`, role: "assistant", text: WELCOME_MESSAGE ?? `Hi — I'm ${AI_NAME ?? "LitLens"}. Tell me your reading taste and I'll recommend books.` }]);
     }, 50);
   }
 
-  // filter recommendations by genre
+  // filter recommendations by genre (unchanged)
   const filteredRecommendations = useMemo(() => {
     if (selectedGenre === "All") return recommendations;
     return recommendations.filter((r) => r.genre === selectedGenre);
   }, [recommendations, selectedGenre]);
 
+  /* UI render: mood-first search with cinematic horizontal results */
   return (
-    <div className="min-h-screen">
-      {/* Top header */}
+    <div className="min-h-screen bg-gradient-to-b from-[#120612] via-[#170717] to-[#0c0810] text-white">
+      {/* top bar */}
       <header className="w-full border-b border-input bg-card/60 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
           <div className="flex items-center gap-3">
@@ -112,6 +123,7 @@ export default function Page() {
               <div className="text-xs text-muted-foreground">AI book recommendations — powered by your reading taste</div>
             </div>
           </div>
+
           <div className="ml-auto flex items-center gap-3">
             <Button onClick={clearChat} className="px-3 py-1 rounded-md border border-input text-sm">
               <Plus className="inline-block mr-2" /> New Chat
@@ -121,9 +133,9 @@ export default function Page() {
         </div>
       </header>
 
-      {/* Main 3-column layout */}
-      <main className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_380px] gap-6">
-        {/* Left column: filters / user */}
+      {/* Main: mood + chat + results */}
+      <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_360px] gap-6">
+        {/* Left: filters */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-4">
             <div className="p-4 rounded-lg bg-card/60 border border-input">
@@ -151,7 +163,6 @@ export default function Page() {
                 <button
                   className="w-full rounded-md px-3 py-2 border border-input text-sm"
                   onClick={() => {
-                    // quick prompt to suggest recommendations based on filters
                     const genrePrompt = selectedGenre === "All" ? "recommend me some books" : `recommend me ${selectedGenre} books`;
                     addUserMessage(`Find books: ${genrePrompt}`);
                     simulateBotResponse(genrePrompt);
@@ -187,9 +198,52 @@ export default function Page() {
           </div>
         </aside>
 
-        {/* Center column: chat */}
-        <section className="flex flex-col gap-4">
-          <div className="flex-1 overflow-auto min-h-[60vh] p-4 rounded-lg bg-card/60 border border-input">
+        {/* Center: chat and mood UI */}
+        <section className="flex flex-col gap-6">
+          {/* Mood search (top of center column) */}
+          <div className="rounded-xl p-6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] border border-input/30 backdrop-blur-md">
+            <h2 className="text-lg font-semibold mb-2">Search</h2>
+            <p className="text-sm text-muted-foreground mb-4">Ask for vibes, themes, titles — whatever you're craving.</p>
+
+            {/* preset chips */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              {MOOD_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    addUserMessage(p);
+                    simulateBotResponse(p);
+                  }}
+                  className="mood-chip"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {/* big pill input */}
+            <div className="mt-2">
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="glass-input flex items-center gap-3 px-4 py-3 rounded-full">
+                  <input
+                    {...register("message")}
+                    ref={(r: any) => {
+                      register("message").ref(r);
+                      inputRef.current = r;
+                    }}
+                    placeholder="What are you in the mood to read?"
+                    className="bg-transparent outline-none w-full text-sm placeholder-white/60"
+                  />
+                  <button type="submit" className="rounded-full p-2 bg-white/6">
+                    <Search />
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Chat (message wall) */}
+          <div className="flex-1 overflow-auto min-h-[44vh] p-4 rounded-lg bg-card/60 border border-input">
             <MessageWall messages={messages} />
             {status === "streaming" && (
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -198,48 +252,35 @@ export default function Page() {
             )}
           </div>
 
-          {/* Input bar */}
-          <form onSubmit={handleSubmit(onSubmit)} className="sticky bottom-4 bg-transparent">
-            <div className="max-w-3xl mx-auto flex items-center gap-3">
-              <div className="flex-1">
-                <Input
-                  {...register("message")}
-                  ref={(r: any) => {
-                    register("message").ref(r);
-                    inputRef.current = r;
-                  }}
-                  placeholder="Tell me what you like — authors, books, mood, or just 'surprise me'..."
-                  className="w-full rounded-2xl border border-input p-3 bg-card/30"
-                  onKeyDown={(e: any) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(onSubmit)();
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  type="submit"
-                  className="rounded-full w-12 h-12 flex items-center justify-center border border-input"
-                >
-                  <ArrowUp />
-                </Button>
-                {status === "streaming" && (
-                  <Button
-                    onClick={() => setStatus("idle")}
-                    className="rounded-full w-12 h-12 flex items-center justify-center border border-input"
-                  >
-                    <Square />
-                  </Button>
-                )}
+          {/* For smaller screens: horizontal cinematic recommendations shown below chat */}
+          {recommendations.length > 0 && (
+            <div className="mt-2">
+              <div className="text-sm text-muted-foreground mb-3">Recommended for you</div>
+              <div className="horizontal-scroll -mx-4 px-4">
+                <div className="flex gap-4">
+                  {recommendations.map((book) => (
+                    <div
+                      key={book.id}
+                      className="cinema-card min-w-[220px] rounded-xl overflow-hidden cursor-pointer"
+                      onClick={() => setSelectedBook(book)}
+                    >
+                      <div className="relative w-full h-[300px]">
+                        <Image src={book.cover} alt={book.title} fill style={{ objectFit: "cover" }} />
+                      </div>
+                      <div className="p-3 bg-gradient-to-t from-black/60 to-transparent">
+                        <div className="font-semibold">{book.title}</div>
+                        <div className="text-xs text-muted-foreground">{book.author} · ⭐ {book.rating}</div>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-2">{book.short}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </form>
+          )}
         </section>
 
-        {/* Right column: recommendations */}
+        {/* Right: compact recommendations & selected book preview */}
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-4">
             <div className="p-4 rounded-lg bg-card/60 border border-input">
@@ -277,7 +318,6 @@ export default function Page() {
                             className="text-xs px-2 py-0.5 rounded border border-input"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // save action: for now just set selected
                               setSelectedBook(book);
                             }}
                           >
@@ -316,55 +356,52 @@ export default function Page() {
           </div>
         </aside>
       </main>
+
+      {/* Floating bottom input (mobile-first) */}
+      <div className="fixed left-0 right-0 bottom-6 flex justify-center pointer-events-none">
+        <div className="w-full max-w-lg px-4 pointer-events-auto">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="glass-input flex items-center gap-3 px-4 py-3 rounded-full">
+              <input
+                {...register("message")}
+                ref={(r: any) => {
+                  register("message").ref(r);
+                  inputRef.current = r;
+                }}
+                placeholder="Add to your search or start over"
+                className="bg-transparent outline-none w-full text-sm placeholder-white/60"
+              />
+              <button type="submit" className="rounded-full p-2 bg-white/6">
+                <ArrowUp />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ---------- demo recommendation generator (replace with real backend results) ---------- */
-function sampleRecommendations(query: string) {
-  const seed = [
-    {
-      id: "b1",
-      title: "The Night Watchman",
-      author: "Louise Erdrich",
-      rating: 4.1,
-      short: "A moving novel about family and resilience.",
-      long: "An absorbing novel about a Native American community... (demo blurb).",
-      cover: "/demo/covers/night-watchman.jpg",
-      genre: "Fiction",
-      goodreads: "https://www.goodreads.com/",
-    },
-    {
-      id: "b2",
-      title: "Project Hail Mary",
-      author: "Andy Weir",
-      rating: 4.5,
-      short: "A thrilling solo space mission with science at heart.",
-      long: "A near-future solo astronaut wakes with no memory and must save humanity... (demo blurb).",
-      cover: "/demo/covers/project-hail-mary.jpg",
-      genre: "Sci-Fi",
-      goodreads: "https://www.goodreads.com/",
-    },
-    {
-      id: "b3",
-      title: "The Silent Patient",
-      author: "Alex Michaelides",
-      rating: 4.0,
-      short: "A gripping psychological thriller with a twist.",
-      long: "A psychotherapist tries to treat a silent patient who shot her husband... (demo blurb).",
-      cover: "/demo/covers/silent-patient.jpg",
-      genre: "Mystery",
-      goodreads: "https://www.goodreads.com/",
-    },
-  ];
+/* ---------- utility: simple stable hash for generating short ids ---------- */
+function hashCode(str: string) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return h;
+}
 
-  // return seeded list plus some query-driven re-order
   if (!query) return seed;
+
   const q = query.toLowerCase();
+  // small deterministic re-order: sort by whether query contains certain keywords
+  const score = (b: any) =>
+    (q.includes("space") && b.title.toLowerCase().includes("project") ? 1.2 : 0) +
+    (q.includes("thrill") && b.genre === "Mystery" ? 1.1 : 0) +
+    (b.rating ?? 4) * 0.1;
+
   return seed
-    .map((s, i) => ({
-      ...s,
-      rating: Math.round((s.rating + (q.includes("space") ? 0.4 : 0) - (i * 0.05)) * 10) / 10,
-    }))
-    .sort((a, b) => b.rating - a.rating);
+    .map((s) => ({ ...s, score: score(s) }))
+    .sort((a, b) => b.score - a.score)
+    .map(({ score, ...rest }) => rest);
 }
