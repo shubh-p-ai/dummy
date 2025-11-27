@@ -153,7 +153,7 @@ export default function Chat() {
                       <Image src="/logo.png" alt="Logo" width={36} height={36} />
                     </AvatarFallback>
                   </Avatar>
-                  <p className="tracking-tight ml-2">{AI_NAME}</p>
+                  <p className="ml-3 text-2xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">{AI_NAME}</p>
               </ChatHeaderBlock>
               <ChatHeaderBlock className="justify-center items-center">
               </ChatHeaderBlock>
