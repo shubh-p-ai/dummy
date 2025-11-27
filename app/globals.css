@@ -43,75 +43,75 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-// SparkGPT UI Light Theme: Indigo/Purple
+// Light Theme (Default fallback, set to Dark theme aesthetics)
 :root {
-  --radius: 0.75rem; /* Rounded corners */
-  --background: oklch(1 0 0); /* Pure White background */
-  --foreground: oklch(0.1 0 0); /* Dark text */
-  --card: oklch(1 0 0); /* White cards */
-  --card-foreground: oklch(0.1 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1 0 0);
-  --primary: oklch(0.35 0.15 285); /* Deep Indigo/Purple */
-  --primary-foreground: oklch(1 0 0); /* White text on primary */
-  --secondary: oklch(0.95 0.01 285); /* Very light purple/gray for secondary elements */
-  --secondary-foreground: oklch(0.25 0 0);
-  --muted: oklch(0.95 0.01 285);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.95 0.01 285);
-  --accent-foreground: oklch(0.25 0 0);
-  --destructive: oklch(0.577 0.245 27.325); 
-  --border: oklch(0.9 0 0); /* Light gray border */
-  --input: oklch(0.97 0 0); /* Off-white for input fields */
-  --ring: oklch(0.35 0.15 285); /* Purple ring focus */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.35 0.15 285); /* Purple for sidebar/key areas */
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.985 0 0); 
-  --sidebar-primary-foreground: oklch(0.35 0.15 285); 
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.75rem; 
+  --background: oklch(0.08 0 0); /* Deep Black */
+  --foreground: oklch(0.95 0 0); /* White/Near White text */
+  --card: oklch(0.12 0 0); /* Darker gray for cards/messages */
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.7 0.25 330); /* Vibrant Magenta/Pink/Purple */
+  --primary-foreground: oklch(0.1 0 0); /* Dark text on vibrant primary */
+  --secondary: oklch(0.2 0 0); /* Dark gray for secondary elements */
+  --secondary-foreground: oklch(0.6 0 0); /* Lighter gray text */
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.7 0.25 330); /* Accent uses primary color for highlights */
+  --accent-foreground: oklch(0.95 0 0); 
+  --destructive: oklch(0.7 0.15 40); /* Orange/Red for warning */
+  --border: oklch(0.2 0 0); /* Dark border */
+  --input: oklch(0.15 0 0); /* Input background is a distinct dark color */
+  --ring: oklch(0.7 0.25 330); /* Magenta ring focus */
+  --chart-1: oklch(0.7 0.25 330); /* Chart colors should align with theme */
+  --chart-2: oklch(0.6 0.15 280);
+  --chart-3: oklch(0.5 0.1 200);
+  --chart-4: oklch(0.7 0.2 100);
+  --chart-5: oklch(0.6 0.18 50);
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: var(--primary); 
+  --sidebar-primary-foreground: var(--primary-foreground); 
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: var(--ring);
 }
 
-// SparkGPT UI Dark Theme (Inferred Dark Mode)
+// Dark Theme (Matches Light theme, ensuring full dark implementation)
 .dark {
-  --background: oklch(0.12 0 0); 
+  --background: oklch(0.08 0 0);
   --foreground: oklch(0.95 0 0);
-  --card: oklch(0.18 0 0);
+  --card: oklch(0.12 0 0);
   --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.18 0 0);
+  --popover: oklch(0.12 0 0);
   --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.5 0.15 285); /* Brighter purple */
-  --primary-foreground: oklch(0.12 0 0);
-  --secondary: oklch(0.25 0 0);
-  --secondary-foreground: oklch(0.7 0 0);
-  --muted: oklch(0.25 0 0);
+  --primary: oklch(0.7 0.25 330);
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.6 0 0);
+  --muted: oklch(0.2 0 0);
   --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.25 0 0);
-  --accent-foreground: oklch(0.9 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 20%);
-  --ring: oklch(0.5 0.15 285);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0); 
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --accent: oklch(0.7 0.25 330); 
+  --accent-foreground: oklch(0.95 0 0); 
+  --destructive: oklch(0.7 0.15 40); 
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.15 0 0);
+  --ring: oklch(0.7 0.25 330);
+  --chart-1: oklch(0.7 0.25 330); 
+  --chart-2: oklch(0.6 0.15 280);
+  --chart-3: oklch(0.5 0.1 200);
+  --chart-4: oklch(0.7 0.2 100);
+  --chart-5: oklch(0.6 0.18 50);
+  --sidebar: oklch(0.12 0 0); 
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: var(--primary); 
+  --sidebar-primary-foreground: var(--primary-foreground); 
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: var(--ring);
 }
 
 @layer base {
@@ -125,8 +125,8 @@
   .single-char-link {
     @apply bg-card text-card-foreground px-2 py-1 rounded-full hover:underline hover:scale-105 transition-all duration-100 !text-foreground !no-underline border-input border;
   }
-  /* Custom class for the chat wall background to match the clean white UI */
+  /* Ensure a solid, dark background for the main chat container area */
   .chat-wall-container {
-    background-color: var(--background);
+    @apply bg-background;
   }
 }
