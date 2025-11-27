@@ -43,7 +43,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Light Theme (Default fallback, set to Dark theme aesthetics) */
+// Light Theme (Default fallback, set to Dark theme aesthetics)
 :root {
   --radius: 0.75rem; 
   --background: oklch(0.08 0 0); /* Deep Black */
@@ -62,7 +62,7 @@
   --accent-foreground: oklch(0.95 0 0); 
   --destructive: oklch(0.7 0.15 40); /* Orange/Red for warning */
   --border: oklch(0.2 0 0); /* Dark border */
-  --input: oklch(0.15 0 0); /* Input background is a distinct dark color */
+  --input: oklch(0.15 0.1 330); /* UPDATED: Dark magenta/purple for input background */
   --ring: oklch(0.7 0.25 330); /* Magenta ring focus */
   --chart-1: oklch(0.7 0.25 330); /* Chart colors should align with theme */
   --chart-2: oklch(0.6 0.15 280);
@@ -79,7 +79,7 @@
   --sidebar-ring: var(--ring);
 }
 
-/* Dark Theme (Matches Light theme, ensuring full dark implementation) */
+// Dark Theme (Matches Light theme, ensuring full dark implementation)
 .dark {
   --background: oklch(0.08 0 0);
   --foreground: oklch(0.95 0 0);
@@ -97,7 +97,7 @@
   --accent-foreground: oklch(0.95 0 0); 
   --destructive: oklch(0.7 0.15 40); 
   --border: oklch(0.2 0 0);
-  --input: oklch(0.15 0 0);
+  --input: oklch(0.15 0.1 330); /* UPDATED: Dark magenta/purple for input background */
   --ring: oklch(0.7 0.25 330);
   --chart-1: oklch(0.7 0.25 330); 
   --chart-2: oklch(0.6 0.15 280);
@@ -120,6 +120,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Specific styling for input fields to enforce the new purple background and white text */
+  input, 
+  textarea,
+  select,
+  .input-field {
+    @apply flex h-10 w-full rounded-md border bg-input px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
   
   .single-char-link {
