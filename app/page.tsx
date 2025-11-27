@@ -153,7 +153,7 @@ export default function Chat() {
                       <Image src="/logo.png" alt="Logo" width={36} height={36} />
                     </AvatarFallback>
                   </Avatar>
-                  <p className="tracking-tight ml-2">Chat with {AI_NAME}</p>
+                  <p className="tracking-tight ml-2">{AI_NAME}</p>
               </ChatHeaderBlock>
               <ChatHeaderBlock className="justify-center items-center">
               </ChatHeaderBlock>
@@ -211,7 +211,7 @@ export default function Chat() {
                             {...field}
                             id="chat-form-message"
                             // Input now uses bg-input (dark gray) and rounded-[25px]
-                            className="h-15 pr-15 pl-5 bg-input border-border rounded-[25px]" 
+                            className="h-15 pr-15 pl-5 bg-purple-600 border-border rounded-[25px]" 
                             placeholder="Recommend me a fantasy novel, or a biography..."
                             disabled={status === "streaming"}
                             aria-invalid={fieldState.invalid}
