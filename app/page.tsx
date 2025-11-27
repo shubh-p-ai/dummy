@@ -211,7 +211,7 @@ export default function Chat() {
                             {...field}
                             id="chat-form-message"
                             // Input now uses bg-input (dark gray) and rounded-[25px]
-                            className="h-15 pr-15 pl-5 bg-purple-600 border-border rounded-[25px]" 
+                            className="h-15 pr-15 pl-5 bg-purple-600 border-border rounded-[25px] placeholder:text-white" 
                             placeholder="Recommend me a fantasy novel, or a biography..."
                             disabled={status === "streaming"}
                             aria-invalid={fieldState.invalid}
@@ -226,12 +226,12 @@ export default function Chat() {
                           {(status == "ready" || status == "error") && (
                             <Button
                               // Send button uses solid primary color (magenta/purple)
-                              className="absolute right-3 top-3 rounded-full bg-primary hover:bg-primary/90"
+                              className="absolute right-3 top-3 rounded-full bg-black hover:bg-gray-800"
                               type="submit"
                               disabled={!field.value.trim()}
                               size="icon"
                             >
-                              <ArrowUp className="size-4" />
+                              <ArrowUp className="size-4 text-white"" />
                             </Button>
                           )}
                           {(status == "streaming" || status == "submitted") && (
