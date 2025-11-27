@@ -127,12 +127,30 @@ export default function Chat() {
     form.reset();
   }
 
-  function clearChat() {
-    const newMessages: UIMessage[] = [];
+function clearChat() {
+    // 1. Define the Welcome Message
+    const welcomeMessage: UIMessage = {
+      id: `welcome-${Date.now()}`,
+      role: "assistant",
+      parts: [
+        {
+          type: "text",
+          // Use your WELCOME_MESSAGE constant
+          text: WELCOME_MESSAGE,
+        },
+      ],
+    };
+    const newMessages: UIMessage[] = [welcomeMessage];
     const newDurations = {};
+    // 2. Update state to show the welcome message
     setMessages(newMessages);
     setDurations(newDurations);
+    // 3. Update localStorage so the message persists after refresh
     saveMessagesToStorage(newMessages, newDurations);
+    // Optional: Reset the ref to allow the initial welcome message logic to run 
+    // again if the component were to be unmounted and remounted without a full page refresh
+    // Though not strictly necessary with the fix above, it ensures consistency.
+    welcomeMessageShownRef.current = true; 
     toast.success("Chat cleared");
   }
 
