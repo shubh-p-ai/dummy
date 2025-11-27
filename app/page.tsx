@@ -1,3 +1,5 @@
+// Chat.tsx (The main component file)
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import { ArrowUp, Eraser, Loader2, Square } from "lucide-react"; 
+import { ArrowUp, Eraser, Loader2, Square, BookOpen, Star } from "lucide-react"; // Added Star and BookOpen
 import { MessageWall } from "@/components/messages/message-wall";
 import { ChatHeader } from "@/app/parts/chat-header";
 import { ChatHeaderBlock } from "@/app/parts/chat-header";
@@ -23,6 +25,96 @@ import { useEffect, useState, useRef } from "react";
 import { AI_NAME, CLEAR_CHAT_TEXT, OWNER_NAME, WELCOME_MESSAGE } from "@/config";
 import Image from "next/image";
 import Link from "next/link";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming you have a Card component
+
+// --- Book Data and BookSuggestions Component ---
+
+// Define a type for the book data
+type Book = {
+  title: string;
+  author: string;
+  rating: number; // e.g., 4.5
+  genre: string;
+  imageUrl: string; // Placeholder for image URL
+};
+
+// Placeholder data for the top-rated books
+const TOP_RATED_BOOKS: Book[] = [
+  {
+    title: "The Hunger Games",
+    author: "Suzanne Collins",
+    rating: 4.35,
+    genre: "Young Adult, Fiction, Fantasy, Science Fiction, Adventure",
+    imageUrl: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1586722975i/2767052.jpg",
+  },
+  {
+    title: "Pride and Prejudice",
+    author: "Jane Austen, Anna Quindlen",
+    rating: 4.29,
+    genre: "Classics, Romance, Fiction, Literature",
+    imageUrl: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1320399351i/1885.jpg",
+  },
+  {
+    title: "To Kill a Mockingbird",
+    author: "Harper Lee",
+    rating: 4.26,
+    genre: "Classics, Fiction, Literature, Historical",
+    imageUrl: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1553383690i/2657.jpg",
+  },
+];
+
+// New component for displaying book suggestions
+const BookSuggestions = () => (
+  <div className="hidden lg:block w-[300px] xl:w-[350px] p-5 pt-[88px] h-screen overflow-y-auto bg-background border-l border-gray-800 fixed right-0 top-0">
+    <h3 className="text-xl font-bold mb-5 text-white flex items-center">
+      <BookOpen className="size-5 mr-2 text-purple-400" />
+      Top Rated Reads
+    </h3>
+    <div className="space-y-4">
+      {TOP_RATED_BOOKS.map((book, index) => (
+        <Card key={index} className="bg-gray-900 border-gray-700 text-white rounded-xl shadow-lg">
+          <CardHeader className="p-4 flex flex-row items-start">
+             <div className="flex-shrink-0 w-16 h-24 bg-gray-700 rounded-md overflow-hidden relative mr-4">
+                {/* Placeholder for cover image */}
+                <Image
+                    src={book.imageUrl}
+                    alt={`${book.title} cover`}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    className="opacity-70"
+                />
+             </div>
+             <div>
+                <CardTitle className="text-lg font-semibold leading-snug text-purple-400">
+                    {book.title}
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-400 mt-1">
+                    {book.author}
+                </CardDescription>
+             </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-0 text-sm">
+            <p className="text-gray-400 mb-2">
+                <span className="font-medium text-gray-300">Genre:</span> {book.genre}
+            </p>
+            <div className="flex items-center text-yellow-400">
+                <Star className="size-4 fill-yellow-400 mr-1" />
+                <span className="font-bold">{book.rating}</span>/5
+            </div>
+          </CardContent>
+          <CardFooter className="p-4 pt-0">
+             {/* Example link - replace with a real link */}
+             <Link href="#" className="text-xs text-purple-300 hover:text-purple-400 underline transition-colors">
+                View on GoodReads
+             </Link>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
+// --- End of New Components ---
 
 const formSchema = z.object({
   message: z
@@ -190,27 +282,40 @@ function clearChat() {
             </ChatHeader>
           </div>
         </div>
-        {/* Chat Wall: Use solid background class */}
-        <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container">
-          <div className="flex flex-col items-center justify-end min-h-full">
-            {isClient ? (
-              <>
-                <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
-                {status === "submitted" && (
-                  <div className="flex justify-start max-w-3xl w-full">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+
+        {/* --- Main Content Area: Chat Wall and Suggestions --- */}
+        <div className="flex h-full w-full">
+            {/* Chat Wall Container: Takes all available width, adjusting for suggestions on large screens */}
+            {/* max-w-[calc(100vw-300px)] applies on lg: screens */}
+            <div className="flex-grow min-w-0"> 
+                <div className="h-screen overflow-y-auto px-5 py-4 w-full pt-[88px] pb-[150px] chat-wall-container lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-350px)]"> 
+                  <div className="flex flex-col items-center justify-end min-h-full">
+                    {isClient ? (
+                      <>
+                        <MessageWall messages={messages} status={status} durations={durations} onDurationChange={handleDurationChange} />
+                        {status === "submitted" && (
+                          <div className="flex justify-start max-w-3xl w-full">
+                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex justify-center max-w-2xl w-full">
+                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="flex justify-center max-w-2xl w-full">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
+                </div>
+            </div>
+
+            {/* Book Suggestions Component - Fixed on the right side */}
+            <BookSuggestions />
         </div>
+        {/* --- End of Main Content Area --- */}
+
+
         {/* Footer/Input Area: Solid background, no fade/transparency, and dark color */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background overflow-visible pt-5 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background overflow-visible pt-5 shadow-lg lg:right-[300px] xl:right-[350px]">
           <div className="w-full px-5 pt-0 pb-1 items-center flex justify-center relative overflow-visible">
             {/* Removed message-fade-overlay class here */}
             <div className="max-w-3xl w-full">
